@@ -1,7 +1,6 @@
-import logo from "../logo.svg";
 import CssBaseline from "@mui/material/CssBaseline";
-import "./App.css";
 import ImageCarousel from "./ImageCarousel";
+import "./App.css";
 
 function App() {
   return (

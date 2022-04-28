@@ -1,11 +1,11 @@
-import React, { useState, useEffect } from "react";
+import React, { useState, useEffect, Fragment } from "react";
 import styled from "styled-components";
 import { Grid } from "react-loader-spinner";
 import Container from "@mui/material/Container";
 import Alert from "@mui/material/Alert";
 import ArrowForwardIosIcon from "@mui/icons-material/ArrowForwardIos";
 import ArrowBackIosIcon from "@mui/icons-material/ArrowBackIos";
-import { fetchImages, fetchImage } from "../api/index";
+import { fetchImages } from "../api/index";
 
 const Loader = styled.div`
   margin: 0 auto;
@@ -31,60 +31,34 @@ const ImageCarousel = (props) => {
   const [errorMsg, setError] = useState("");
 
   useEffect(() => {
-    console.log("useEffect for fetching all images");
-
-    const fetchData = async () => {
-      setLoading(true);
+    setLoading(true);
+    const loadImages = async () => {
       try {
         const fetchedImages = await fetchImages();
-        console.log(fetchedImages);
         setFetchedImages(fetchedImages);
         setImagesLength(fetchedImages.length);
-        setLoading(false);
       } catch (error) {
-        console.log("error: ", error);
         setError(error);
-        setLoading(false);
       }
     };
-    fetchData();
+    loadImages();
+    setLoading(false);
   }, []);
 
-  useEffect(async () => {
-    setLoading(true);
-    console.log("useEffect for fetching single image");
-    try {
-      console.log(currentImgIndex);
-
-      await fetchImage(currentImgIndex);
-      console.log(currentImgIndex);
-
-      setLoading(false);
-    } catch (error) {
-      console.log("error: ", error);
-      setError(error);
-      setLoading(false);
-    }
-  }, [currentImgIndex]);
-
   const handleNextClick = () => {
-    console.log(imagesLength);
     setCurrentImgIndex(
       currentImgIndex === imagesLength - 1 ? 0 : currentImgIndex + 1
     );
   };
 
   const handlePrevClick = () => {
-    console.log(imagesLength);
-    console.log(currentImgIndex);
-
     setCurrentImgIndex(
       currentImgIndex === 0 ? imagesLength - 1 : currentImgIndex - 1
     );
   };
 
   const loader = (
-    <Loader>
+    <Loader data-testid="loader">
       <Grid height="200" width="200" color="grey" ariaLabel="loading" />
     </Loader>
   );
@@ -97,25 +71,39 @@ const ImageCarousel = (props) => {
 
   const carousel = (
     <>
-      <ArrowBackIosIcon sx={{ margin: "0 auto" }} onClick={handlePrevClick} />
+      <ArrowBackIosIcon
+        sx={{
+          margin: "0 auto",
+          "&:hover": {
+            cursor: "pointer"
+          }
+        }}
+        onClick={handlePrevClick}
+      />
 
       {fetchedImages.length &&
         fetchedImages.map((fetchedImage, index) => {
           return (
-            <div key={index}>
+            <Fragment key={index}>
               {index === currentImgIndex && fetchedImage && (
                 <Image
                   key={index}
                   src={fetchedImages[currentImgIndex]}
                   alt="image"
+                  data-testid="fetchImg"
                 />
               )}
-            </div>
+            </Fragment>
           );
         })}
 
       <ArrowForwardIosIcon
-        sx={{ margin: "0 auto" }}
+        sx={{
+          margin: "0 auto",
+          "&:hover": {
+            cursor: "pointer"
+          }
+        }}
         onClick={handleNextClick}
       />
     </>
@@ -131,7 +119,11 @@ const ImageCarousel = (props) => {
         justifyContent: "center"
       }}
     >
-      {loading ? loader : !fetchedImages || errorMsg ? error : carousel}
+      {loading || !fetchedImages || isNaN(currentImgIndex)
+        ? loader
+        : errorMsg
+        ? error
+        : carousel}
     </Container>
   );
 };
